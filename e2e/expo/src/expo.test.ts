@@ -12,7 +12,7 @@ describe('expo', () => {
   let proj: string;
 
   beforeEach(
-    () => (proj = newProject({ name: uniq('proj'), packageManager: 'npm' }))
+    () => (proj = newProject({ name: uniq('expo'), packageManager: 'npm' }))
   );
   afterEach(() => cleanupProject());
 

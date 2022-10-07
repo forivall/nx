@@ -14,7 +14,13 @@ import { join } from 'path';
 describe('react native', () => {
   let proj: string;
 
-  beforeEach(() => (proj = newProject()));
+  beforeEach(
+    () =>
+      (proj = newProject({
+        name: uniq('react-native'),
+        packageManager: 'yarn',
+      }))
+  );
   afterEach(() => cleanupProject());
 
   it('should test, create ios and android JS bundles', async () => {
