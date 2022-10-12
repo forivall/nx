@@ -79,7 +79,7 @@ export function editProjectMainJs(
   let moduleExportsIsEmptyOrNonExistentOrInvalid = false;
   let alreadyHasBuilder: any;
   const rootMainJsExists = tree.exists(projectMainJsFile);
-  let moduleExportsFull: ts.Node[] = [];
+  let moduleExportsFull: ts.ExpressionStatement[] = [];
 
   if (rootMainJsExists) {
     const file = getTsSourceFile(tree, projectMainJsFile);

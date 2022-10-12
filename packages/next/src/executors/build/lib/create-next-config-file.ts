@@ -45,9 +45,7 @@ function getWithNxContent() {
   const getWithNxContextDeclaration = findNodes(
     withNxSource,
     ts.SyntaxKind.FunctionDeclaration
-  )?.find(
-    (node: ts.FunctionDeclaration) => node.name?.text === 'getWithNxContext'
-  );
+  )?.find((node) => node.name?.text === 'getWithNxContext');
 
   if (getWithNxContextDeclaration) {
     withNxContent = applyChangesToString(withNxContent, [

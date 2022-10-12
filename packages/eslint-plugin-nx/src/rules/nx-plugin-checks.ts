@@ -200,7 +200,7 @@ export function checkCollectionFileNode(
   ].filter(({ collectionNode }) => !!collectionNode);
 
   for (const { collectionNode, key } of collectionNodes) {
-    if (collectionNode.value.type !== 'JSONObjectExpression') {
+    if (collectionNode?.value.type !== 'JSONObjectExpression') {
       context.report({
         messageId: 'valueShouldBeObject',
         data: { key },
@@ -360,7 +360,7 @@ export function validateImplemenationNode(
   } else {
     const [implementationPath, identifier] =
       implementationNode.value.value.split('#');
-    let resolvedPath: string;
+    let resolvedPath: string | undefined;
 
     const modulePath = path.join(
       path.dirname(context.getFilename()),
@@ -379,7 +379,7 @@ export function validateImplemenationNode(
       });
     }
 
-    if (identifier) {
+    if (identifier && resolvedPath) {
       try {
         const m = require(resolvedPath);
         if (!(identifier in m && typeof m[identifier] === 'function')) {
@@ -427,7 +427,7 @@ export function validatePackageGroup(
     if (packageGroupNode.value.type === 'JSONArrayExpression') {
       // Look at entries which are an object
       const members = packageGroupNode.value.elements.filter(
-        (x) => x.type === 'JSONObjectExpression'
+        (x) => x?.type === 'JSONObjectExpression'
       );
       // validate that the version property exists and is valid
       for (const member of members) {

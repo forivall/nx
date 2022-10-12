@@ -83,8 +83,8 @@ export async function buildProjectGraphUsingProjectFileMap(
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
-  let filesToProcess;
-  let cachedFileData;
+  let filesToProcess: ProjectFileMap;
+  let cachedFileData: { [project: string]: { [file: string]: FileData } };
   if (
     cache &&
     !shouldRecomputeWholeGraph(

@@ -11,10 +11,7 @@ export function addRemoteToConfig(
   source: ts.SourceFile,
   app: string
 ): StringChange[] {
-  const assignments = findNodes(
-    source,
-    ts.SyntaxKind.PropertyAssignment
-  ) as ts.PropertyAssignment[];
+  const assignments = findNodes(source, ts.SyntaxKind.PropertyAssignment);
 
   const remotesAssignment = assignments.find(
     (s) => s.name.getText() === 'remotes'
@@ -44,10 +41,7 @@ export function addRemoteToConfig(
     ].filter(Boolean) as StringChange[];
   }
 
-  const binaryExpressions = findNodes(
-    source,
-    ts.SyntaxKind.BinaryExpression
-  ) as ts.BinaryExpression[];
+  const binaryExpressions = findNodes(source, ts.SyntaxKind.BinaryExpression);
   const exportExpression = binaryExpressions.find((b) => {
     if (b.left.kind === ts.SyntaxKind.PropertyAccessExpression) {
       const pae = b.left as ts.PropertyAccessExpression;

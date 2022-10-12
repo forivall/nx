@@ -43,6 +43,17 @@ import {
 import { createESLintRule } from '../utils/create-eslint-rule';
 import { readProjectGraph } from '../utils/project-graph-utils';
 
+declare global {
+  var projectPath: string | undefined;
+  var targetProjectLocator: TargetProjectLocator | undefined;
+  var workspaceLayout: { libsDir: string; appsDir: string } | undefined;
+}
+
+type _ImportExportSpecifier<
+  T = TSESTree.ImportClause | TSESTree.ExportSpecifier
+> = T extends { imported?: any } ? T : T & { imported?: never };
+type ImportExportSpecifier = _ImportExportSpecifier;
+
 type Options = [
   {
     allow: string[];
@@ -146,9 +157,7 @@ export default createESLintRule<Options, MessageIds>({
     /**
      * Globally cached info about workspace
      */
-    const projectPath = normalizePath(
-      (global as any).projectPath || workspaceRoot
-    );
+    const projectPath = normalizePath(global.projectPath || workspaceRoot);
     const fileName = normalizePath(context.getFilename());
 
     const projectGraph = readProjectGraph(RULE_NAME);
@@ -157,16 +166,16 @@ export default createESLintRule<Options, MessageIds>({
       return {};
     }
 
-    const workspaceLayout = (global as any).workspaceLayout;
+    const workspaceLayout = global.workspaceLayout;
 
-    if (!(global as any).targetProjectLocator) {
-      (global as any).targetProjectLocator = new TargetProjectLocator(
+    if (!global.targetProjectLocator) {
+      global.targetProjectLocator = new TargetProjectLocator(
         projectGraph.nodes,
         projectGraph.externalNodes
       );
     }
-    const targetProjectLocator = (global as any)
-      .targetProjectLocator as TargetProjectLocator;
+    const targetProjectLocator =
+      global.targetProjectLocator as TargetProjectLocator;
 
     function run(
       node:
@@ -204,7 +213,10 @@ export default createESLintRule<Options, MessageIds>({
       // check for relative and absolute imports
       const isAbsoluteImportIntoAnotherProj =
         isAbsoluteImportIntoAnotherProject(imp, workspaceLayout);
-      let targetProject: ProjectGraphProjectNode | ProjectGraphExternalNode;
+      let targetProject:
+        | ProjectGraphProjectNode
+        | ProjectGraphExternalNode
+        | undefined;
 
       if (isAbsoluteImportIntoAnotherProj) {
         targetProject = findTargetProject(projectGraph, imp);
@@ -231,15 +243,19 @@ export default createESLintRule<Options, MessageIds>({
               );
 
               if (indexTsPaths && indexTsPaths.length > 0) {
-                const specifiers = (node as any).specifiers;
+                const specifiers: ImportExportSpecifier[] = (
+                  node as Extract<typeof node, { specifiers?: any }>
+                ).specifiers;
                 if (!specifiers || specifiers.length === 0) {
-                  return;
+                  return null;
                 }
 
-                const imports = specifiers.map((s) => s.imported.name);
+                const imports = specifiers
+                  .map((s) => s.imported?.name)
+                  .filter((s): s is string => typeof s === 'string');
 
                 // process each potential entry point and try to find the imports
-                const importsToRemap = [];
+                const importsToRemap: Parameters<typeof groupImports>[0] = [];
 
                 for (const entryPointPath of indexTsPaths) {
                   for (const importMember of imports) {
@@ -268,9 +284,9 @@ export default createESLintRule<Options, MessageIds>({
                 }
               }
             }
+            return null;
           },
         });
-        return;
       }
 
       targetProject =
@@ -307,13 +323,13 @@ export default createESLintRule<Options, MessageIds>({
               if (indexTsPaths && indexTsPaths.length > 0) {
                 const specifiers = (node as any).specifiers;
                 if (!specifiers || specifiers.length === 0) {
-                  return;
+                  return null;
                 }
                 // imported JS functions to remap
                 const imports = specifiers.map((s) => s.imported.name);
 
                 // process each potential entry point and try to find the imports
-                const importsToRemap = [];
+                const importsToRemap: Parameters<typeof groupImports>[0] = [];
 
                 for (const entryPointPath of indexTsPaths) {
                   for (const importMember of imports) {
@@ -354,6 +370,7 @@ export default createESLintRule<Options, MessageIds>({
                   );
                 }
               }
+              return null;
             },
           });
         }
@@ -553,7 +570,7 @@ export default createESLintRule<Options, MessageIds>({
               projectGraph,
               constraint
             );
-            if (matches.length > 0) {
+            if (matches && matches.length > 0) {
               matches.forEach(([target, violatingSource, constraint]) => {
                 context.report({
                   node,

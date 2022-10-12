@@ -42,10 +42,7 @@ export function migrateReactDomRender(
   sourcePath: string,
   source: ts.SourceFile
 ): StringChange[] {
-  const allImports = findNodes(
-    source,
-    ts.SyntaxKind.ImportDeclaration
-  ) as ts.ImportDeclaration[];
+  const allImports = findNodes(source, ts.SyntaxKind.ImportDeclaration);
   const reactDomImport = allImports.find(
     (x) => x.moduleSpecifier.getText() === "'react-dom'"
   );
@@ -59,10 +56,7 @@ export function migrateReactDomRender(
     });
   }
 
-  const calls = findNodes(
-    source,
-    ts.SyntaxKind.CallExpression
-  ) as ts.CallExpression[];
+  const calls = findNodes(source, ts.SyntaxKind.CallExpression);
   const renderCall = calls.find((x) => {
     if (x.expression.kind !== ts.SyntaxKind.PropertyAccessExpression)
       return false;

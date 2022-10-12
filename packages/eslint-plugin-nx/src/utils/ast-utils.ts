@@ -10,7 +10,9 @@ import ts = require('typescript');
 import { logger } from '@nrwl/devkit';
 import { workspaceRoot } from '@nrwl/devkit';
 
-function tryReadBaseJson() {
+function tryReadBaseJson(): null | {
+  compilerOptions?: { paths?: Record<string, string[]> };
+} {
   try {
     return readJsonFile(joinPathFragments(workspaceRoot, 'tsconfig.base.json'));
   } catch (e) {
@@ -32,7 +34,7 @@ export function getBarrelEntryPointByImportScope(
 }
 
 export function getBarrelEntryPointProjectNode(
-  projectNode: ProjectGraphProjectNode<any>
+  projectNode: ProjectGraphProjectNode
 ): { path: string; importScope: string }[] | null {
   const tsConfigBase = tryReadBaseJson();
 
@@ -103,14 +105,14 @@ export function getRelativeImportPath(
 
   // Search in the current file whether there's an export already!
   const memberNodes = findNodes(sourceFile, ts.SyntaxKind.Identifier).filter(
-    (identifier: any) => identifier.text === exportedMember
+    (identifier) => identifier.text === exportedMember
   );
 
   let hasExport = false;
   for (const memberNode of memberNodes || []) {
     if (memberNode) {
       // recursively navigate upwards to find the ExportKey modifier
-      let parent = memberNode;
+      let parent: ts.Node = memberNode;
       do {
         parent = parent.parent;
         if (parent) {
@@ -129,19 +131,18 @@ export function getRelativeImportPath(
 
           // if our identifier is within an ExportDeclaration but is not just
           // a re-export of some other module, we're good
-          if (
-            parent.kind === ts.SyntaxKind.ExportDeclaration &&
-            !(parent as any).moduleSpecifier
-          ) {
+          if (ts.isExportDeclaration(parent) && !parent.moduleSpecifier) {
             hasExport = true;
             break;
           }
 
           if (
-            parent.modifiers &&
-            parent.modifiers.find(
-              (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
-            )
+            ts.canHaveModifiers(parent) &&
+            ts
+              .getModifiers(parent)
+              ?.find(
+                (modifier) => modifier.kind === ts.SyntaxKind.ExportKeyword
+              )
           ) {
             /**
              * if we get to a function export declaration we need to verify whether the
@@ -162,8 +163,8 @@ export function getRelativeImportPath(
              * We want to avoid accidentally picking the someFunction export since we're searching upwards
              * starting from `SOME_CONSTANT` identifier usages.
              */
-            if (parent.kind === ts.SyntaxKind.FunctionDeclaration) {
-              const parentName = (parent as any).name?.text;
+            if (ts.isFunctionDeclaration(parent)) {
+              const parentName = parent.name?.text;
               if (parentName === exportedMember) {
                 hasExport = true;
                 break;
@@ -193,22 +194,27 @@ export function getRelativeImportPath(
   const exportDeclarations = findNodes(
     sourceFile,
     ts.SyntaxKind.ExportDeclaration
-  ) as ts.ExportDeclaration[];
+  );
   for (const exportDeclaration of exportDeclarations) {
-    if ((exportDeclaration as any).moduleSpecifier) {
+    if (exportDeclaration.moduleSpecifier) {
       // verify whether the export declaration we're looking at is a named export
       // cause in that case we need to check whether our searched member is
       // part of the exports
       if (
         exportDeclaration.exportClause &&
         findNodes(exportDeclaration, ts.SyntaxKind.Identifier).filter(
-          (identifier: any) => identifier.text === exportedMember
+          (identifier) => identifier.text === exportedMember
         ).length === 0
       ) {
         continue;
       }
 
-      const modulePath = (exportDeclaration as any).moduleSpecifier.text;
+      type MaybeLiteral =
+        | ts.LiteralLikeNode
+        | (ts.Expression & { text?: never })
+        | undefined;
+      const modulePath = (exportDeclaration.moduleSpecifier as MaybeLiteral)
+        ?.text;
 
       let moduleFilePath =
         modulePath &&

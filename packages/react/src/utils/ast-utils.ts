@@ -36,10 +36,7 @@ export function findMainRenderStatement(
   source: ts.SourceFile
 ): ts.CallExpression | null {
   // 1. Try to find ReactDOM.render.
-  const calls = findNodes(
-    source,
-    ts.SyntaxKind.CallExpression
-  ) as ts.CallExpression[];
+  const calls = findNodes(source, ts.SyntaxKind.CallExpression);
 
   for (const expr of calls) {
     const inner = expr.expression;
@@ -63,10 +60,7 @@ export function findMainRenderStatement(
   }
 
   // 2. Try to find render from 'react-dom'.
-  const imports = findNodes(
-    source,
-    ts.SyntaxKind.ImportDeclaration
-  ) as ts.ImportDeclaration[];
+  const imports = findNodes(source, ts.SyntaxKind.ImportDeclaration);
   const hasRenderImport = imports.some(
     (i) =>
       i.moduleSpecifier.getText().includes('react-dom') &&

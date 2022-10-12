@@ -70,7 +70,7 @@ export type ProjectGraphNode<T = any> =
 /**
  * A node describing a project in a workspace
  */
-export interface ProjectGraphProjectNode<T = any> {
+export interface ProjectGraphProjectNode<T = Record<string, any>> {
   type: 'app' | 'e2e' | 'lib';
   name: string;
   /**
