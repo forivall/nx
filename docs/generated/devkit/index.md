@@ -284,9 +284,9 @@ A plugin for Nx
 
 #### Type parameters
 
-| Name | Type  |
-| :--- | :---- |
-| `T`  | `any` |
+| Name | Type                       |
+| :--- | :------------------------- |
+| `T`  | `Record`<`string`, `any`\> |
 
 ---
 
@@ -1087,10 +1087,10 @@ Returns the list of outputs that will be cached.
 
 #### Parameters
 
-| Name   | Type                                                                            | Description                                               |
-| :----- | :------------------------------------------------------------------------------ | :-------------------------------------------------------- |
-| `task` | `Pick`<[`Task`](../../devkit/index#task), `"target"` \| `"overrides"`\>         | target + overrides                                        |
-| `node` | [`ProjectGraphProjectNode`](../../devkit/index#projectgraphprojectnode)<`any`\> | ProjectGraphProjectNode object that the task runs against |
+| Name   | Type                                                                                                 | Description                                               |
+| :----- | :--------------------------------------------------------------------------------------------------- | :-------------------------------------------------------- |
+| `task` | `Pick`<[`Task`](../../devkit/index#task), `"target"` \| `"overrides"`\>                              | target + overrides                                        |
+| `node` | [`ProjectGraphProjectNode`](../../devkit/index#projectgraphprojectnode)<`Record`<`string`, `any`\>\> | ProjectGraphProjectNode object that the task runs against |
 
 #### Returns
 
