@@ -16,6 +16,13 @@ import { getRelativeProjectJsonSchemaPath } from 'nx/src/generators/utils/projec
 import { dirname } from 'path';
 import { Schema } from './schema';
 import { getProjectConfigurationPath } from './utils/get-project-configuration-path';
+import { readNxJsonInTree } from '../../utils/ast-utils';
+import {
+  getRelativeProjectJsonSchemaPath,
+  readNxJson,
+  readWorkspace,
+  updateProjectConfiguration,
+} from 'nx/src/generators/utils/project-configuration';
 
 export const SCHEMA_OPTIONS_ARE_MUTUALLY_EXCLUSIVE =
   '--project and --all are mutually exclusive';
@@ -55,21 +62,42 @@ export async function convertToNxProjectGenerator(host: Tree, schema: Schema) {
       continue;
     }
 
-    writeJson(host, configPath, {
+    let projectJson = {
+      name: undefined,
       $schema: getRelativeProjectJsonSchemaPath(host, configuration),
       ...configuration,
       root: undefined,
-    });
+    };
 
-    updateJson(host, getWorkspacePath(host), (value) => {
-      value.projects[project] = normalizePath(dirname(configPath));
-      return value;
-    });
+    if (!projectJson.name) {
+      projectJson.name = toProjectName(configuration.root, readNxJson(host));
+    }
+
+    writeJson(host, configPath, projectJson);
+
+    const workspacePath = getWorkspacePath(host);
+    if (workspacePath) {
+      updateJson(host, workspacePath, (value) => {
+        value.projects[project] = normalizePath(dirname(configPath));
+        return value;
+      });
+    }
   }
 
   if (!schema.skipFormat) {
     await formatFiles(host);
   }
+}
+
+function toProjectName(directory: string, nxJson: any): string {
+  let { appsDir, libsDir } = nxJson?.workspaceLayout || {};
+  appsDir ??= 'apps';
+  libsDir ??= 'libs';
+  const parts = directory.split(/[\/\\]/g);
+  if ([appsDir, libsDir].includes(parts[0])) {
+    parts.splice(0, 1);
+  }
+  return parts.join('-').toLowerCase();
 }
 
 export default convertToNxProjectGenerator;
