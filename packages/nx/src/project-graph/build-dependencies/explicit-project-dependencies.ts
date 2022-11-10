@@ -6,6 +6,7 @@ import {
   ProjectGraph,
 } from '../../config/project-graph';
 import { Workspace } from '../../config/workspace-json-project-json';
+import { ExplicitDependencyEntry } from './interfaces';
 
 export function buildExplicitTypeScriptDependencies(
   workspace: Workspace,
@@ -18,10 +19,10 @@ export function buildExplicitTypeScriptDependencies(
 
   const importLocator = new TypeScriptImportLocator();
   const targetProjectLocator = new TargetProjectLocator(
-    graph.nodes as any,
+    graph.nodes,
     graph.externalNodes
   );
-  const res = [] as any;
+  const res: ExplicitDependencyEntry[] = [];
   Object.keys(filesToProcess).forEach((source) => {
     Object.values(filesToProcess[source]).forEach((f) => {
       importLocator.fromFile(

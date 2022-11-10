@@ -5,7 +5,10 @@ import {
   loadNxPlugins,
   mergePluginTargetsWithNxTargets,
 } from '../../utils/nx-plugin';
-import { ProjectGraphProcessorContext } from '../../config/project-graph';
+import {
+  ProjectGraphProcessorContext,
+  ProjectGraphProjectNode,
+} from '../../config/project-graph';
 import { mergeNpmScriptsWithTargets } from '../../utils/project-graph-utils';
 import { ProjectGraphBuilder } from '../project-graph-builder';
 import { PackageJson } from '../../utils/package-json';
@@ -24,7 +27,7 @@ export function buildWorkspaceProjectNodes(
   builder: ProjectGraphBuilder,
   nxJson: NxJsonConfiguration
 ) {
-  const toAdd = [];
+  const toAdd: ProjectGraphProjectNode[] = [];
   const projects = Object.keys(ctx.workspace.projects);
   const projectsSet = new Set(projects);
 

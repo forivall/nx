@@ -30,7 +30,7 @@ export function projectHasTargetAndConfiguration(
 
 export function mergeNpmScriptsWithTargets(
   projectRoot: string,
-  targets
+  targets: Record<string, TargetConfiguration>
 ): Record<string, TargetConfiguration> {
   try {
     const { scripts, nx }: PackageJson = readJsonFile(

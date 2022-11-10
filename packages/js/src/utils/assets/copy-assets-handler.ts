@@ -118,7 +118,7 @@ export class CopyAssetsHandler {
         });
 
         this.callback(
-          files.reduce((acc, src) => {
+          files.reduce<FileEvent[]>((acc, src) => {
             if (
               !ag.ignore?.some((ig) => minimatch(src, ig)) &&
               !this.ignore.ignores(src)

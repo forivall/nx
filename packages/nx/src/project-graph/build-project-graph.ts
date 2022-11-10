@@ -43,6 +43,7 @@ import {
   parseLockFile,
 } from '../lock-file/lock-file';
 import { Workspaces } from '../config/workspaces';
+import { ExplicitDependencyEntry } from './build-dependencies/interfaces';
 
 export async function buildProjectGraph() {
   const projectConfigurations = new Workspaces(
@@ -82,8 +83,8 @@ export async function buildProjectGraphUsingProjectFileMap(
   const packageJsonDeps = readCombinedDeps();
   const rootTsConfig = readRootTsConfig();
 
-  let filesToProcess;
-  let cachedFileData;
+  let filesToProcess: ProjectFileMap;
+  let cachedFileData: { [project: string]: { [file: string]: FileData } };
   if (
     cache &&
     !shouldRecomputeWholeGraph(
@@ -299,7 +300,7 @@ function splitFilesIntoBins(
 }
 
 function createWorkerPool(numberOfWorkers: number) {
-  const res = [];
+  const res: import('worker_threads').Worker[] = [];
   for (let i = 0; i < numberOfWorkers; ++i) {
     res.push(
       new (require('worker_threads').Worker)(
@@ -358,7 +359,7 @@ function buildExplicitDependenciesUsingWorkers(
 
   return new Promise((res, reject) => {
     for (let w of workers) {
-      w.on('message', (explicitDependencies) => {
+      w.on('message', (explicitDependencies: ExplicitDependencyEntry[]) => {
         explicitDependencies.forEach((r) => {
           builder.addExplicitDependency(
             r.sourceProjectName,

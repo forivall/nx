@@ -1,27 +1,25 @@
 import { defaultFileRead } from '../file-utils';
 import { join } from 'path';
-import { ProjectFileMap, ProjectGraph } from '../../config/project-graph';
+import {
+  ProjectFileMap,
+  ProjectGraph,
+  ProjectGraphProjectNode,
+} from '../../config/project-graph';
 import { parseJson } from '../../utils/json';
 import { getImportPath, joinPathFragments } from '../../utils/path';
 import { Workspace } from '../../config/workspace-json-project-json';
-
-class ProjectGraphNodeRecords {}
+import { ExplicitDependencyEntry } from './interfaces';
 
 export function buildExplicitPackageJsonDependencies(
   workspace: Workspace,
   graph: ProjectGraph,
   filesToProcess: ProjectFileMap
 ) {
-  const res = [] as any;
+  const res: ExplicitDependencyEntry[] = [];
   let packageNameMap = undefined;
   Object.keys(filesToProcess).forEach((source) => {
     Object.values(filesToProcess[source]).forEach((f) => {
-      if (
-        isPackageJsonAtProjectRoot(
-          graph.nodes as ProjectGraphNodeRecords,
-          f.file
-        )
-      ) {
+      if (isPackageJsonAtProjectRoot(graph.nodes, f.file)) {
         // we only create the package name map once and only if a package.json file changes
         packageNameMap = packageNameMap || createPackageNameMap(workspace);
         processPackageJson(source, f.file, graph, res, packageNameMap);
@@ -32,7 +30,7 @@ export function buildExplicitPackageJsonDependencies(
 }
 
 function createPackageNameMap(w: Workspace) {
-  const res = {};
+  const res: Record<string, string> = {};
   for (let projectName of Object.keys(w.projects)) {
     try {
       const packageJson = parseJson(
@@ -46,7 +44,7 @@ function createPackageNameMap(w: Workspace) {
 }
 
 function isPackageJsonAtProjectRoot(
-  nodes: ProjectGraphNodeRecords,
+  nodes: Record<string, ProjectGraphProjectNode>,
   fileName: string
 ) {
   return Object.values(nodes).find(
@@ -60,7 +58,7 @@ function processPackageJson(
   sourceProject: string,
   fileName: string,
   graph: ProjectGraph,
-  collectedDeps: any[],
+  collectedDeps: ExplicitDependencyEntry[],
   packageNameMap: { [packageName: string]: string }
 ) {
   try {

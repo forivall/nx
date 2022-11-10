@@ -360,8 +360,8 @@ export function updateBuildableProjectPackageJsonDependencies(
   );
 
   const packageJsonPath = `${outputs[0]}/package.json`;
-  let packageJson;
-  let workspacePackageJson;
+  let packageJson: PackageJson;
+  let workspacePackageJson: PackageJson;
   try {
     packageJson = readJsonFile(packageJsonPath);
     workspacePackageJson = readJsonFile(`${root}/package.json`);
@@ -385,7 +385,7 @@ export function updateBuildableProjectPackageJsonDependencies(
       !hasDependency(packageJson, 'peerDependencies', packageName)
     ) {
       try {
-        let depVersion;
+        let depVersion: string;
         if (entry.node.type === 'lib') {
           const outputs = getOutputsForTargetAndConfiguration(
             {

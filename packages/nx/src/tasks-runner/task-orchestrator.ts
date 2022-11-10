@@ -42,7 +42,7 @@ export class TaskOrchestrator {
   } = {};
   private waitingForTasks: Function[] = [];
 
-  private groups = [];
+  private groups: boolean[] = [];
 
   private bailed = false;
 
