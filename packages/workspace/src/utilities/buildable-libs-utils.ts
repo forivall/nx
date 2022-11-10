@@ -8,10 +8,12 @@ import {
   stripIndents,
   writeJsonFile,
 } from '@nrwl/devkit';
-import * as ts from 'typescript';
+import type * as ts from 'typescript';
 import { unlinkSync } from 'fs';
 import { output } from './output';
 import { isNpmProject } from 'nx/src/project-graph/operators';
+import { readTsConfig } from './typescript';
+import { PackageJson } from 'nx/src/utils/package-json';
 
 function isBuildable(target: string, node: ProjectGraphProjectNode): boolean {
   return (
@@ -191,12 +193,7 @@ function readPaths(tsConfig: string | ts.ParsedCommandLine) {
   try {
     let config: ts.ParsedCommandLine;
     if (typeof tsConfig === 'string') {
-      const configFile = ts.readConfigFile(tsConfig, ts.sys.readFile);
-      config = ts.parseJsonConfigFileContent(
-        configFile.config,
-        ts.sys,
-        dirname(tsConfig)
-      );
+      config = readTsConfig(tsConfig);
     } else {
       config = tsConfig;
     }
