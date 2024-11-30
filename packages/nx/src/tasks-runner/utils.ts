@@ -565,6 +565,12 @@ export function isCacheableTask(
   );
 }
 
+export function isPromise<T extends { success: boolean }>(
+  v: Promise<T> | AsyncIterableIterator<T>
+): v is Promise<T> {
+  return typeof (v as any)?.then === 'function';
+}
+
 function longRunningTask(task: Task) {
   const t = task.target.target;
   return (

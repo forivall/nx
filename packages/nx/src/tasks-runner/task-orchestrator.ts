@@ -14,6 +14,7 @@ import {
   getPrintableCommandArgsForTask,
   getTargetConfigurationForTask,
   isCacheableTask,
+  isPromise,
   removeTasksFromTaskGraph,
   shouldStreamOutput,
 } from './utils';
@@ -33,6 +34,11 @@ import { output } from '../utils/output';
 import { combineOptionsForExecutor } from '../utils/params';
 import { NxJsonConfiguration } from '../config/nx-json';
 import type { TaskDetails } from '../native';
+import { readProjectsConfigurationFromProjectGraph } from '../project-graph/project-graph';
+import {
+  getLastValueFromAsyncIterableIterator,
+  isAsyncIterator,
+} from '../utils/async-iterator';
 
 export class TaskOrchestrator {
   private taskDetails: TaskDetails | null = getTaskDetails();
@@ -476,6 +482,46 @@ export class TaskOrchestrator {
         results.push({
           task,
           status: 'success',
+          terminalOutput: '',
+        });
+      } else if (
+        process.env.NX_RUN_EXECUTOR_DIRECTLY === 'true' &&
+        getExecutorForTask(task, this.projectGraph).isNxExecutor
+      ) {
+        const executor = getExecutorForTask(task, this.projectGraph);
+        const implementation = executor.implementationFactory();
+
+        const isVerbose = process.env.NX_VERBOSE_LOGGING === 'true';
+        const combinedOptions = combineOptionsForExecutor(
+          task.overrides,
+          task.target.configuration ?? targetConfiguration.defaultConfiguration,
+          targetConfiguration,
+          executor.schema,
+          task.target.project,
+          relative(task.projectRoot ?? workspaceRoot, process.cwd()),
+          isVerbose
+        );
+        const r = implementation(combinedOptions, {
+          root: workspaceRoot,
+          target: targetConfiguration,
+          projectsConfigurations: readProjectsConfigurationFromProjectGraph(
+            this.projectGraph
+          ),
+          nxJsonConfiguration: this.nxJson,
+          projectName: task.target.project,
+          targetName: task.target.target,
+          configurationName: task.target.configuration,
+          projectGraph: this.projectGraph,
+          taskGraph: this.taskGraph,
+          cwd: process.cwd(),
+          isVerbose,
+        });
+        const result = await (isPromise(r)
+          ? r
+          : getLastValueFromAsyncIterableIterator(r));
+        results.push({
+          task,
+          status: result.success ? 'success' : 'failure',
           terminalOutput: '',
         });
       } else {
