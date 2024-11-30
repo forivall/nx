@@ -52,6 +52,10 @@ export function shouldUseTui(
     return false;
   }
 
+  if (process.env.NX_RUN_COMMANDS_DIRECTLY === 'true') {
+    return false;
+  }
+
   if (nxArgs.outputStyle === 'dynamic' || nxArgs.outputStyle === 'tui') {
     return true;
   }
